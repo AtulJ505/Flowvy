@@ -32,54 +32,27 @@ export function checkForCycles(
   sourceId: string,
   targetId: string
 ): boolean {
-  // Check if adding this edge would create a cycle
+  if (sourceId === targetId) return true;
+  const nodeIds = new Set(nodes.map(node => node.id));
+  if (!nodeIds.has(sourceId) || !nodeIds.has(targetId)) return false;
+  // Adding source -> target creates a cycle iff target already reaches source.
+  const adjacency = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) continue;
+    const neighbors = adjacency.get(edge.source) ?? [];
+    neighbors.push(edge.target);
+    adjacency.set(edge.source, neighbors);
+  }
+  const pending = [targetId];
   const visited = new Set<string>();
-  const recursionStack = new Set<string>();
-
-  function hasCycle(nodeId: string): boolean {
-    if (recursionStack.has(nodeId)) {
-      return true; // Cycle detected
-    }
-    if (visited.has(nodeId)) {
-      return false;
-    }
-
-    visited.add(nodeId);
-    recursionStack.add(nodeId);
-
-    const outgoingEdges = edges
-      .filter((e) => e.source === nodeId || (e.source === nodeId && e.target !== targetId))
-      .map((e) => e.target);
-
-    // Also check if we're creating a direct cycle
-    if (nodeId === targetId && sourceId === targetId) {
-      return true;
-    }
-
-    // Check if target would connect back to source
-    if (nodeId === targetId) {
-      const targetOutgoing = edges.filter((e) => e.source === targetId).map((e) => e.target);
-      if (targetOutgoing.includes(sourceId)) {
-        return true;
-      }
-    }
-
-    for (const neighborId of outgoingEdges) {
-      if (hasCycle(neighborId)) {
-        return true;
-      }
-    }
-
-    recursionStack.delete(nodeId);
-    return false;
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (current === sourceId) return true;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    pending.push(...(adjacency.get(current) ?? []));
   }
-
-  // Check if adding edge from source to target creates a cycle
-  if (targetId === sourceId) {
-    return true;
-  }
-
-  return hasCycle(targetId);
+  return false;
 }
 
 export function getNodeDependencies(
@@ -138,6 +111,9 @@ export function getTopologicalOrder(
     }
   }
 
+  if (result.length !== nodeIds.size) {
+    throw new Error("Workflow contains a cycle; remove the circular connection before executing");
+  }
   return result;
 }
 

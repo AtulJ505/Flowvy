@@ -96,7 +96,7 @@ export function collectNodeInputs(
     }
 
     // Handle multiple inputs of the same type (e.g., multiple images)
-    if (inputs[targetHandle]) {
+    if (Object.prototype.hasOwnProperty.call(inputs, targetHandle)) {
       if (Array.isArray(inputs[targetHandle])) {
         inputs[targetHandle].push(value);
       } else {
