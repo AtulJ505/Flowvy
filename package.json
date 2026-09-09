@@ -10,7 +10,8 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "trigger:dev": "trigger.dev@latest dev"
+    "trigger:dev": "trigger.dev@latest dev",
+    "test": "tsc -p tsconfig.test.json && node --test .test-build/tests/*.test.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",

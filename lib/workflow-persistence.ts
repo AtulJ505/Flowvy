@@ -1,5 +1,6 @@
 import { Node, Edge, Viewport } from "reactflow";
 import { WorkflowData } from "./types";
+import { getTopologicalOrder } from "./utils";
 
 /**
  * Exports workflow to JSON format
@@ -26,6 +27,7 @@ export function exportWorkflowToJSON(
 export function importWorkflowFromJSON(json: string): WorkflowData {
   try {
     const parsed = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object") throw new Error("Expected a workflow object");
     if (!parsed.nodes || !Array.isArray(parsed.nodes)) {
       throw new Error("Invalid workflow format: missing nodes array");
     }
@@ -34,12 +36,13 @@ export function importWorkflowFromJSON(json: string): WorkflowData {
     }
 
     const nodes: Node[] = parsed.nodes.map((n: any, idx: number) => {
+      if (!n || typeof n !== "object") throw new Error(`Invalid node at index ${idx}`);
       const id = typeof n.id === "string" ? n.id : "";
       const type = typeof n.type === "string" ? n.type : "";
       const position =
         n.position &&
-        typeof n.position.x === "number" &&
-        typeof n.position.y === "number"
+        Number.isFinite(n.position.x) &&
+        Number.isFinite(n.position.y)
           ? n.position
           : { x: 100 + idx * 20, y: 100 + idx * 20 };
       const data = typeof n.data === "object" && n.data !== null ? n.data : {};
@@ -56,11 +59,18 @@ export function importWorkflowFromJSON(json: string): WorkflowData {
       } as Node;
     });
 
+    const nodeIds = new Set(nodes.map(node => node.id));
+    if (nodeIds.size !== nodes.length) throw new Error("Node IDs must be unique");
+
     const edges: Edge[] = parsed.edges.map((e: any, idx: number) => {
+      if (!e || typeof e !== "object") throw new Error(`Invalid edge at index ${idx}`);
       const source = typeof e.source === "string" ? e.source : "";
       const target = typeof e.target === "string" ? e.target : "";
       if (!source || !target) {
         throw new Error(`Invalid edge at index ${idx}: missing source/target`);
+      }
+      if (!nodeIds.has(source) || !nodeIds.has(target)) {
+        throw new Error(`Invalid edge at index ${idx}: unknown source or target node`);
       }
       const sourceHandle =
         typeof e.sourceHandle === "string" ? e.sourceHandle : undefined;
@@ -81,11 +91,16 @@ export function importWorkflowFromJSON(json: string): WorkflowData {
       } as Edge;
     });
 
+    if (new Set(edges.map(edge => edge.id)).size !== edges.length) {
+      throw new Error("Edge IDs must be unique");
+    }
+    getTopologicalOrder(nodes, edges);
+
     const viewport: Viewport =
       parsed.viewport &&
-      typeof parsed.viewport.x === "number" &&
-      typeof parsed.viewport.y === "number" &&
-      typeof parsed.viewport.zoom === "number"
+      Number.isFinite(parsed.viewport.x) &&
+      Number.isFinite(parsed.viewport.y) &&
+      Number.isFinite(parsed.viewport.zoom) && parsed.viewport.zoom > 0
         ? parsed.viewport
         : { x: 0, y: 0, zoom: 1 };
 

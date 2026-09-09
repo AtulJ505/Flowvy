@@ -1,10 +1,12 @@
-# Weavy.ai Workflow Builder Clone
+# Flowvy — Visual Workflow Builder
 
-A pixel-perfect UI/UX clone of Weavy.ai's workflow builder, focused on LLM workflows using React Flow, Google Gemini API, and Trigger.dev.
+A visual editor for text, image, video, and LLM workflows, built with TypeScript, React Flow, Next.js, and Trigger.dev. This project began as a UI study inspired by Weavy.ai; it is an independent project and is not affiliated with Weavy.
+
+[![Workflow tests](https://github.com/AtulJ505/Flowvy/actions/workflows/ci.yml/badge.svg)](https://github.com/AtulJ505/Flowvy/actions/workflows/ci.yml)
 
 ## Features
 
-- 🎨 Pixel-perfect UI matching Weavy.ai's design
+- 🎨 Visual canvas for connecting workflow nodes
 - 🔐 Clerk authentication with protected routes
 - 🔄 6 node types: Text, Upload Image, Upload Video, LLM, Crop Image, Extract Frame
 - 🌊 React Flow canvas with dot grid background and minimap
@@ -157,6 +159,23 @@ The project includes a pre-built sample workflow demonstrating:
 - Parallel execution of independent branches
 - Convergence point with multiple inputs
 - Input chaining across nodes
+
+## Workflow validation and tests
+
+```bash
+npm ci --ignore-scripts
+npm test
+```
+
+The test suite runs without external credentials. It checks long-cycle detection, dependency ordering, imported JSON validation, workflow round trips, and preservation of empty input values. CI runs these workflow tests for pushes and pull requests.
+
+Imported workflows must have unique node and edge IDs, reference existing nodes, and form an acyclic graph. Cyclic execution plans fail with an explicit error instead of silently omitting nodes.
+
+For full application development, use the normal installation and setup steps above, including Prisma generation and cloud-service configuration. The workflow unit suite does not validate deployed authentication, the database, or external media and LLM execution. Dependency updates and deployment validation remain necessary before production use.
+
+## Contributing
+
+Report bugs with a minimal workflow JSON and reproduction steps, excluding credentials and private media URLs. Include a regression test for workflow-logic changes and run `npm test` before submitting a pull request.
 
 ## Deployment
 
