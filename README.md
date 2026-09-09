@@ -167,7 +167,7 @@ npm ci --ignore-scripts
 npm test
 ```
 
-The test suite runs without external credentials. It checks long-cycle detection, dependency ordering, imported JSON validation, workflow round trips, and preservation of empty input values. CI runs these workflow tests for pushes and pull requests.
+The test suite runs without external credentials. It checks long-cycle detection, dependency ordering, imported JSON validation, workflow round trips, and preservation of empty input values. CI runs these workflow tests and a production build for pushes and pull requests. The build generates the Prisma client before compiling Next.js.
 
 Imported workflows must have unique node and edge IDs, reference existing nodes, and form an acyclic graph. Cyclic execution plans fail with an explicit error instead of silently omitting nodes.
 
